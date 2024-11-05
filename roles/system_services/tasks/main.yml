@@ -1,0 +1,16 @@
+---
+- name: Restart SSH service
+  service:
+    name: ssh
+    state: restarted
+  become: yes
+
+- name: Test if {{ vpc_name }} user can connect via SSH
+  command: "ssh -o BatchMode=yes -i {{ ansible_ssh_private_key_file }} {{ custom_user }}@{{ ansible_host }} echo 'SSH access working'"
+  ignore_errors: yes
+  register: ssh_test_result
+
+- name: Fail if SSH access for {{ vpc_name }} user is not working
+  fail:
+    msg: "SSH access is not working for {{ custom_user }}. Halting playbook."
+  when: ssh_test_result.rc != 0

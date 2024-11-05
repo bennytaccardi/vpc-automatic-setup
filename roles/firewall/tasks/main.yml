@@ -1,0 +1,44 @@
+---
+- name: Ensure UFW is installed
+  apt:
+    name: ufw
+    state: present
+  become: yes
+
+- name: Set default UFW policy to deny incoming traffic
+  ufw:
+    state: enabled
+    default: deny
+    direction: incoming
+  become: yes
+
+- name: Set default UFW policy to allow outgoing traffic
+  ufw:
+    default: allow
+    direction: outgoing
+  become: yes
+
+- name: Allow OpenSSH in UFW
+  ufw:
+    rule: allow
+    name: OpenSSH
+  become: yes
+
+- name: Allow HTTP in UFW
+  ufw:
+    rule: allow
+    port: 80
+    proto: tcp
+  become: yes
+
+- name: Allow HTTPS in UFW
+  ufw:
+    rule: allow
+    port: 443
+    proto: tcp
+  become: yes
+
+- name: Enable UFW (actual)
+  ufw:
+    state: enabled
+  become: yes

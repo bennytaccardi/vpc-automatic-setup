@@ -1,0 +1,33 @@
+---
+- name: Create user {{ custom_user }}
+  user:
+    name: "{{ custom_user }}"
+    password: "{{ custom_user_password | password_hash('sha512') }}"
+    shell: /bin/bash
+    state: present
+  become: yes
+
+- name: Add user {{ custom_user }} to sudo group
+  user:
+    name: "{{ custom_user }}"
+    groups: sudo
+    append: yes
+  become: yes
+
+- name: Ensure the SSH directory for {{ custom_user }} exists
+  file:
+    path: /home/{{ custom_user }}/.ssh
+    state: directory
+    owner: "{{ custom_user }}"
+    group: "{{ custom_user }}"
+    mode: "0700"
+  become: yes
+
+- name: Copy authorized key for {{ custom_user }}
+  copy:
+    src: "{{ ansible_ssh_private_key_file }}"
+    dest: /home/{{ custom_user }}/.ssh/authorized_keys
+    owner: "{{ custom_user }}"
+    group: "{{ custom_user }}"
+    mode: "0600"
+  become: yes

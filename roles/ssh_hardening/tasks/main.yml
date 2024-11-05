@@ -1,0 +1,34 @@
+---
+- name: Disallow SSH password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^PasswordAuthentication"
+    line: "PasswordAuthentication no"
+  become: yes
+
+- name: Disallow root login via SSH
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin no"
+  become: yes
+
+- name: Disallow PAM authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^UsePAM"
+    line: "UsePAM no"
+  become: yes
+
+- name: Check if 50-cloud-init.conf exists
+  stat:
+    path: /etc/ssh/ssh_config.d/50-cloud-init.conf
+  register: cloud_init_file
+
+- name: Disallow SSH password authentication in 50-cloud-init.conf (if exists)
+  lineinfile:
+    path: /etc/ssh/ssh_config.d/50-cloud-init.conf
+    regexp: "^PasswordAuthentication"
+    line: "PasswordAuthentication no"
+  when: cloud_init_file.stat.exists
+  become: yes
