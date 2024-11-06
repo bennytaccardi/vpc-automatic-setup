@@ -1,6 +1,6 @@
 ---
 - name: Setup personal VPC
-  hosts: awsvpc
+  hosts: vpc
   vars_files:
     - "{{ playbook_dir }}/config.yml"
     - "{{ playbook_dir }}/secrets.yml"

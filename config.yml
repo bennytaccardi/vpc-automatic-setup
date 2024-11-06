@@ -1,4 +1,2 @@
 # config.yml
-custom_user_password: testUser!23
-custom_user: testuser
-vpc_name: awsvpc
+vpc_name: vpc
