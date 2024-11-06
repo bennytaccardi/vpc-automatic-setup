@@ -5,6 +5,8 @@
     password: "{{ custom_user_password | password_hash('sha512') }}"
     shell: /bin/bash
     state: present
+    create_home: yes # Explicitly create home directory
+    system: no
   become: yes
 
 - name: Add user {{ custom_user }} to sudo group
@@ -14,20 +16,71 @@
     append: yes
   become: yes
 
+- name: Ensure user home directory exists and has correct permissions
+  file:
+    path: "/home/{{ custom_user }}"
+    state: directory
+    owner: "{{ custom_user }}"
+    group: "{{ custom_user }}"
+    mode: "0750"
+  become: yes
+
 - name: Ensure the SSH directory for {{ custom_user }} exists
   file:
-    path: /home/{{ custom_user }}/.ssh
+    path: "/home/{{ custom_user }}/.ssh"
     state: directory
     owner: "{{ custom_user }}"
     group: "{{ custom_user }}"
     mode: "0700"
+    recurse: no
   become: yes
 
-- name: Copy authorized key for {{ custom_user }}
-  copy:
-    src: "{{ ansible_ssh_private_key_file }}"
-    dest: /home/{{ custom_user }}/.ssh/authorized_keys
+- name: Generate SSH key pair for {{ custom_user }}
+  openssh_keypair:
+    path: "/home/{{ custom_user }}/.ssh/id_rsa"
+    type: rsa
+    size: 2048
     owner: "{{ custom_user }}"
     group: "{{ custom_user }}"
     mode: "0600"
+  become: yes
+
+- name: Set correct permissions for private key
+  file:
+    path: "/home/{{ custom_user }}/.ssh/id_rsa"
+    owner: "{{ custom_user }}"
+    group: "{{ custom_user }}"
+    mode: "0600"
+  become: yes
+
+- name: Set correct permissions for public key
+  file:
+    path: "/home/{{ custom_user }}/.ssh/id_rsa.pub"
+    owner: "{{ custom_user }}"
+    group: "{{ custom_user }}"
+    mode: "0644"
+  become: yes
+
+- name: Set public key as authorized key for {{ custom_user }}
+  copy:
+    src: "/home/{{ custom_user }}/.ssh/id_rsa.pub"
+    dest: "/home/{{ custom_user }}/.ssh/authorized_keys"
+    remote_src: yes
+    owner: "{{ custom_user }}"
+    group: "{{ custom_user }}"
+    mode: "0600"
+  become: yes
+
+- name: Fetch private key to local machine
+  fetch:
+    src: "/home/{{ custom_user }}/.ssh/id_rsa"
+    dest: "keys/{{ custom_user }}_id_rsa"
+    flat: yes
+  become: yes
+
+- name: Fetch public key to local machine
+  fetch:
+    src: "/home/{{ custom_user }}/.ssh/id_rsa.pub"
+    dest: "keys/{{ custom_user }}_id_rsa.pub"
+    flat: yes
   become: yes

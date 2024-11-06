@@ -4,6 +4,7 @@
     path: /etc/ssh/sshd_config
     regexp: "^PasswordAuthentication"
     line: "PasswordAuthentication no"
+    state: present
   become: yes
 
 - name: Disallow root login via SSH
@@ -11,6 +12,15 @@
     path: /etc/ssh/sshd_config
     regexp: "^PermitRootLogin"
     line: "PermitRootLogin no"
+    state: present
+  become: yes
+
+- name: Ensure public key authentication is allowed
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^PubkeyAuthentication"
+    line: "PubkeyAuthentication yes"
+    state: present
   become: yes
 
 - name: Disallow PAM authentication
@@ -18,6 +28,7 @@
     path: /etc/ssh/sshd_config
     regexp: "^UsePAM"
     line: "UsePAM no"
+    state: present
   become: yes
 
 - name: Check if 50-cloud-init.conf exists
@@ -30,5 +41,12 @@
     path: /etc/ssh/ssh_config.d/50-cloud-init.conf
     regexp: "^PasswordAuthentication"
     line: "PasswordAuthentication no"
+    state: present
   when: cloud_init_file.stat.exists
+  become: yes
+
+- name: Restart SSH service to apply changes
+  service:
+    name: ssh
+    state: restarted
   become: yes
